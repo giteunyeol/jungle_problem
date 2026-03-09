@@ -41,7 +41,10 @@ def bubble_sort(arr):
     ## TODO: 인접한 두 원소 비교 및 교환
     ## arr[j] > arr[j+1]이면 교환
     ## 외부 반복문: n-1번 실행
-    pass
+    for i in range(len(arr)):
+        for j in range(len(arr) - 1):
+            if arr[i] < arr[j]:
+                arr[i], arr[j] = arr[j], arr[i]
         
     return arr
 
