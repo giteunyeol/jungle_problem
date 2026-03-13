@@ -36,7 +36,6 @@ def process_emergency_room(patients):
     Returns:
         처리된 환자 순서
     """
-    # TODO: 빈 힙 생성
     heap = []
     
     
@@ -75,5 +74,4 @@ if __name__ == "__main__":
     print("=== 응급실 환자 처리 ===")
     result2 = process_emergency_room(patients2)
     print(f"처리 순서: {result2}")
-
 
