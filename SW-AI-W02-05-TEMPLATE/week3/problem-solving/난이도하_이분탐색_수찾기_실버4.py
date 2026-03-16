@@ -1,2 +1,10 @@
-# 이분탐색 - 수 찾기 (백준 실버4)
-# 문제 링크: https://www.acmicpc.net/problem/1920
+N = int(input())
+save = set(map(int, input().split()))
+M = int(input())
+is_exist = map(int, input().split())
+for i in is_exist:
+    if i in save:
+        print(1)
+    else:
+        print(0)
+
