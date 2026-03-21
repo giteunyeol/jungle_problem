@@ -53,16 +53,11 @@ def create_graph(vertices, edges, directed=False):
         start = i[0]        
         destination = i[1]
         graph[start].append(destination)
-
-    if not directed:
-        for i in edges:
+        if not directed:
             start = i[1]        
             destination = i[0]
             graph[start].append(destination)
-    
-    for i in edges:
-        graph[i[1]].sort()
-        
+
     return graph
 
 # 테스트 케이스
