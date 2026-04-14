@@ -22,6 +22,13 @@
  * NOTE TO STUDENTS: Before you do anything else, please
  * provide your team information in the following struct.
  ********************************************************/
+team_t team = {
+    "jungle",    /* teamname */
+    "eunyeol", /* name1 */
+    "giteunyeol",   /* id1 */
+    "",          /* name2 */
+    ""           /* id2 */
+};
 
 /* Basic constants and macros */
 
@@ -76,24 +83,29 @@
 
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
-static char *mem_heap;     // 힙의 첫번째 주소
-static char *mem_bkr;      // 힙의 끝 주소 + 1
-static char *mem_max_addr; // 최대로 확장할 수 있는 주소
+// static char *mem_heap;     // 힙의 첫번째 주소
+// static char *mem_brk;      // 힙의 끝 주소 + 1
+// static char *mem_max_addr; // 최대로 확장할 수 있는 주소
+static char *heap_listp = NULL; //heap_listp 제일 처음 프롤로그 블럭 NULL로.
+static char *next_fitp = NULL;
+static void *find_fit(size_t asize); // first fit검색을 수행하는 함수
+static void place(void *bp, size_t asize);
+static void *extend_heap(size_t words);
+static void *coalesce(void *bp);
 
 /*
  * mm_init - initialize the malloc package.
- */
-int mm_init(void)
+*/
+    int mm_init(void)
 {
     /* Create the initial empty heap */
     // 힙 시작에 필요한 초기공간 16바이트 확보하고, 실패하면 -1 리턴
-
     // heap_listp = mem_sbrk(4*WSIZE);
     // if (heap_listp == (void *)-1) { return -1; }, 이거 두줄이랑 같음
     // sbrk는 NULL을 안쓰고 (void *)-1을 리턴하는게 관례임.
     if ((heap_listp = mem_sbrk(4 * WSIZE)) == (void *)-1)
         return -1;
-
+    
     PUT(heap_listp, 0); /* Alignment padding */                          // 정렬 맞추기용 빈칸
     PUT(heap_listp + (1 * WSIZE), PACK(DSIZE, 1)); /* Prologue header */ // 프롤로그 블록(힙 맨 앞에 있는 가짜 할당 블록)의 헤더를 넣어줌
     PUT(heap_listp + (2 * WSIZE), PACK(DSIZE, 1)); /* Prologue footer */ // 프롤로그 블록 푸터 삽입
@@ -105,6 +117,8 @@ int mm_init(void)
     // 힙을 chunksize만큼 free블록을 만들고, 실패하면 mm_init을 실패로 처리함, 실패하면 NULL리턴
     if (extend_heap(CHUNKSIZE / WSIZE) == NULL)
         return -1;
+
+    next_fitp = NEXT_BLKP(heap_listp);
 
     return 0;
 }
@@ -277,5 +291,73 @@ static void *coalesce(void *bp)
         bp = PREV_BLKP(bp);
     }
 
+    //병합했을때 포인터가 잘못 가리키고있으면 보정.
+    if ((next_fitp > (char *)bp) && (next_fitp < (char *)NEXT_BLKP(bp)))
+        next_fitp = bp;
+
     return bp;
 }
+
+static void *find_fit(size_t asize)
+{
+    /*
+    first fit
+    //찾은경우
+    //힙을 처음부터 순회해서 나오면 해당 블락 포인트 리턴
+    void * bp = heap_listp;
+    for (bp = NEXT_BLKP(bp); GET_SIZE(HDRP(bp)); bp = NEXT_BLKP(bp))
+    {
+        if (GET_ALLOC(HDRP(bp)) == 0 && asize <= GET_SIZE(HDRP(bp))) // 가용 블럭이고, 해당 블럭이 사이즈가 될때
+        {
+            return bp;
+        }
+    }
+    // 못찾은경우 NULL 리턴
+    return NULL;
+    */
+    //next fit
+    void * ptr; //실제로 도는 포인터
+    void * start = next_fitp; // 이번 nextfit 시작할곳
+    //항상 검사 가능한 실제 블럭을 가리키게 만들기 때문에, 굳이 NEXT_BLPK(bp) 이런식으로 안써도 됨.
+    for (ptr = start; GET_SIZE(HDRP(ptr)); ptr = NEXT_BLKP(ptr))
+    {
+        if (GET_ALLOC(HDRP(ptr)) == 0 && asize <= GET_SIZE(HDRP(ptr))) // 가용 블럭이고, 해당 블럭이 사이즈가 될때
+        {
+            next_fitp = ptr;
+            return ptr;
+        }
+    }
+    for(ptr = heap_listp; ptr != start; ptr = NEXT_BLKP(ptr))
+    {
+        if (GET_ALLOC(HDRP(ptr)) == 0 && asize <= GET_SIZE(HDRP(ptr))) // 가용 블럭이고, 해당 블럭이 사이즈가 될때
+        {
+            next_fitp = ptr;
+            return ptr;
+        }
+    }
+    // 못찾은경우 NULL 리턴
+    return NULL;
+}
+
+static void place(void *bp, size_t asize)
+{
+    //해당 bp에 asize만큼 배치한다.
+    size_t csize = GET_SIZE(HDRP(bp));
+    
+    if((csize - asize) >= (2 * DSIZE)) // 나눴을때 정상적인 블럭이 됐을때 
+    {
+        PUT(HDRP(bp), PACK(asize, 1));
+        PUT(FTRP(bp), PACK(asize, 1));
+
+        bp = NEXT_BLKP(bp);
+
+        PUT(HDRP(bp), PACK(csize - asize, 0));
+        PUT(FTRP(bp), PACK(csize - asize, 0)); 
+    }
+    else
+    {
+        PUT(HDRP(bp), PACK(csize, 1));
+        PUT(FTRP(bp), PACK(csize, 1));
+    }
+}
+
