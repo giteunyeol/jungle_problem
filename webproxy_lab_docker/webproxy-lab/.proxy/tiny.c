@@ -56,23 +56,23 @@ void doit(int fd)
   char filename[MAXLINE], cgiargs[MAXLINE];
   rio_t rio;
 
-  /* Read request line and headers */
+  /* Read request line and headers */ // 요청라인을 읽고 분석.
   Rio_readinitb(&rio, fd);
   if (!Rio_readlineb(&rio, buf, MAXLINE))
     return;
   printf("%s", buf);
   sscanf(buf, "%s %s %s", method, uri, version);
-  if (strcasecmp(method, "GET"))
+  if (strcasecmp(method, "GET")) // Tiny는 Get 메소드만 지원함.
   {
     clienterror(fd, method, "501", "Not Implemented",
                 "Tiny does not implement this method");
     return;
   }
-  read_requesthdrs(&rio);
+  read_requesthdrs(&rio); // GET이 들어오면 다른요청 헤더들을 무시함.
 
   /* Parse URI from GET request */
-  is_static = parse_uri(uri, filename, cgiargs);
-  if (stat(filename, &sbuf) < 0)
+  is_static = parse_uri(uri, filename, cgiargs); // 정적인지 동적인지 나타내는 플래그
+  if (stat(filename, &sbuf) < 0)                 // 만약 파일이 디스크에 없으면, 에러메세지 보내고 리턴.
   {
     clienterror(fd, filename, "404", "Not found",
                 "Tiny couldn't find this file");
@@ -80,24 +80,24 @@ void doit(int fd)
   }
 
   if (is_static)
-  { /* Serve static content */
-    if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode))
+  {                                                            /* Serve static content */
+    if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) // 만약 정적 컨텐츠면. 보통 파일, 읽기 권한을 가지고 있는지 검증.
     {
       clienterror(fd, filename, "403", "Forbidden",
                   "Tiny couldn't read the file");
       return;
     }
-    serve_static(fd, filename, sbuf.st_size);
+    serve_static(fd, filename, sbuf.st_size); // 만약 그러면, 정적 컨텐츠를 클라이언트에게 제공.
   }
   else
-  { /* Serve dynamic content */
-    if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode))
+  {                                                            /* Serve dynamic content */
+    if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) // 동적이면 실행 가능 검증.
     {
       clienterror(fd, filename, "403", "Forbidden",
                   "Tiny couldn't run the CGI program");
       return;
     }
-    serve_dynamic(fd, filename, cgiargs);
+    serve_dynamic(fd, filename, cgiargs); // 동적컨텐츠 제공.
   }
 }
 
@@ -165,9 +165,10 @@ void serve_static(int fd, char *filename, int filesize)
   int remaining = sizeof(buf);
 
   /* Send response headers to client */
-  get_filetype(filename, filetype);
+  get_filetype(filename, filetype); //파일 이름의 접미어를 검사해 타입을 결정
 
-  /* Build the HTTP response headers correctly - use separate buffers or append */
+  /* Build the HTTP response headers correctly - use separate buffers or append */ 
+  //응답줄, 헤더
   n = snprintf(p, remaining, "HTTP/1.0 200 OK\r\n");
   p += n;
   remaining -= n;
@@ -194,10 +195,10 @@ void serve_static(int fd, char *filename, int filesize)
 
   /* Send response body to client */
   srcfd = Open(filename, O_RDONLY, 0);
-  srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0);
-  Close(srcfd);
-  Rio_writen(fd, srcp, filesize);
-  Munmap(srcp, filesize);
+  srcp = Mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0); //mmap함수는 요청 파일을 vm영역으로 매핑.
+  Close(srcfd); // 파일을 닫음
+  Rio_writen(fd, srcp, filesize); //클라이언트에게 전송
+  Munmap(srcp, filesize); // 매핑된 가상메모리 주소 반환
 }
 
 /*
@@ -220,7 +221,7 @@ void get_filetype(char *filename, char *filetype)
 /*
  * serve_dynamic - run a CGI program on behalf of the client
  */
-void serve_dynamic(int fd, char *filename, char *cgiargs)
+void serve_dynamic(int fd, char *filename, char *cgiargs) //자식프로세스 포크, CGI프로그램 자식 컨텍스트에서 실행.
 {
   char buf[MAXLINE], *emptylist[] = {NULL};
   pid_t pid;
@@ -232,7 +233,7 @@ void serve_dynamic(int fd, char *filename, char *cgiargs)
   Rio_writen(fd, buf, strlen(buf));
 
   /* Create a child process to handle the CGI program */
-  if ((pid = Fork()) < 0)
+  if ((pid = Fork()) < 0) // 새로운 자식 프로세스 포크
   { /* Fork failed */
     perror("Fork failed");
     return;
