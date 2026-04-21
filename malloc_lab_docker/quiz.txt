@@ -1,0 +1,116 @@
+1. 다음 코드의 printf 출력 결과를 적으시오. 
+
+
+
+#include <stdio.h>
+
+int main(int argc, char *argv[])
+
+{
+
+    int arr[2][3] = {1,2,3,4,5,6};
+
+    int (*p)[3] = NULL;
+
+    p = arr;
+
+    
+
+    printf("%d\n", *(p[0] + 1) + *(p[1] + 2));
+
+    printf("%d\n", *(*(p + 1) + 0) + *(*(p + 1) + 1));
+
+    return 0;
+
+}
+
+2. 다음 소스 코드를 완성하여 55와 22가 각 줄에 순서대로 출력되게 만드세요.
+
+
+
+#include <stdio.h>
+
+
+
+int main()
+
+{
+
+    int numArr[5] = { 11, 22, 33, 44, 55 };
+
+    int *numPtrA;
+
+    void *ptr;
+
+
+
+    numPtrA = &numArr[2];
+
+    ptr = numArr;
+
+
+
+    printf("%d\n", /** 변수는numPtrA만을 사용하세요.           **/);
+
+    printf("%d\n", /** 변수는 ptr만을 사용하세요.             **/);
+
+
+
+    return 0;
+
+}
+
+
+
+3. 아래 코드의 실행 결과를 적어 보시오. 
+
+
+
+#include <stdio.h>
+
+ 
+
+int main() {
+
+    char* str[2];
+
+    str[0] = "hello!";
+
+    str[1] = "jungler";
+
+ 
+
+    printf("1. %s\n", str[0] + 1);
+
+    printf("2. %s\n", (str + 1)[0] + 2);
+
+ 
+
+    return 0;
+
+}
+
+
+
+4. 메모리에는 다음과 같은 블록들이 있으며, 각 블록의 크기는 괄호 안에 표시되어 있다.
+
+메모리 블록: A(10), B(50), C(25), D(30), E(40)
+
+다음 순서로 메모리 요청이 들어온다.
+
+요청 순서: 1(30), 2(25), 3(25), 4(10)
+
+First-fit에 대한 예시를 보고, Next-fit과 Best-fit일 때요청에 대한 메모리 할당 순서를 기록하시오. 
+
+
+
+예) First-fit
+
+1 - B
+2 - C
+3 - D
+4 - A
+
+
+
+5. 페이지 폴트(Page Fault)의 개념을 설명하고, 페이지 폴트가 발생했을 때 운영체제가 수행하는 절차를 본인이 이해한 만큼 자세히 서술하시오.

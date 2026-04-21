@@ -1,23 +1,22 @@
 #include <stdio.h>
 
-int main(void)
-{
-    for (int i = 0; i < 3; i++)
-    {
+int main()
 
-        for (int j = 2; j > i; j--)
-        {
-            printf(" ");
-        }
-        printf("*");
-        for (int k = i; k > 0; k--)
-        {
-            printf("**");
-        }
-        printf("\n");
-    }
-    
-    
-    
+{
+
+    int numArr[5] = {11, 22, 33, 44, 55};
+
+    int *numPtrA;
+
+    void *ptr;
+
+    numPtrA = &numArr[2];
+
+    ptr = numArr;
+
+    printf("%d\n", *(numPtrA + 2));
+
+    printf("%d\n", *((int*)ptr + 1));
+
     return 0;
 }
